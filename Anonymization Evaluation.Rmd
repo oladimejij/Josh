@@ -1,0 +1,309 @@
+---
+title: "Anonymization"
+author: "Joshua Olawoyin OLADIMEJI"
+date: "2023-08-10"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#Set working directory and load necessary libraries
+#```{r}
+setwd("C:/Users/user/Documents/RGUMasters/Second Semester/Project/Anonymisation of network traffic data/R Project/Anonymization")
+
+install.packages("stringr")
+library(stringr)
+install.packages("entropy")
+library(entropy)
+install.packages("dplyr")
+library(dplyr)
+```
+# PREFIX-PRESERVING CONDENSATION-BASED ANONYMIZATION TECHNIQUE
+```{r}
+PersonalLatest <- read.csv("~/RGUMasters/Second Semester/Project/Anonymisation of network traffic data/R Project/Anonymization/PersonalLatest.csv", stringsAsFactors=TRUE) # load the dataset
+
+View(PersonalLatest) # view the dataset
+```
+
+# Function to anonymize the IP address, split the IP address into octets, and apply prefix-preserving condensation-based
+```{r}
+anonymize_ip <- function(ip_address, prefix_lenght) 
+  {
+ octets <- str_split(ip_address, "\\.")[[1]] 
+ anonymized_ip <- paste0(octets[1:prefix_length], collapse = ".")
+ return(anonymized_ip)
+}
+anonymize_network_traffic <- function(traffic_data, prefix_length) {
+anonymized_data <- sapply(traffic_data, anonymize_ip, prefix_length = prefix_length) 
+return(anonymized_data)
+}
+```
+
+# Sample network traffic dataset with a column named "source" and define the number of octets to keep for the anonymized IP.
+
+```{r}
+network_traffic_data <- c("74.125.175.39" , "212.1.144.238" , "192.168.1.145" , "8.8.8.8" , "4.2.2.2" , "40.99.214.130" , "172.217.169.10" , "142.250.187.238" ,"40.99.150.130" , "212.1.144.204" )
+
+prefix_length <- 2 # number of octets to keep
+```
+# Anonymize using prefix-preserving condensation and display the anonymized data
+```{r}
+anonymized_traffic_data <- sapply(network_traffic_data, anonymize_ip, prefix_length <- 2)
+
+ print(anonymized_traffic_data)
+```
+Evaluate accuracy
+
+#Function to calculate Jaccard similarity index
+```{r}
+calculate_jaccard_similarity <- function(original_data, anonymized_data ) {
+ set_original <- unique(sort(original_data)) 
+ set_anonymized <- unique(sort(anonymized_data))
+intersection <- length(intersect(set_original, set_anonymized))
+union <- length(union(set_original, set_anonymized))
+
+jaccard_similarity <- intersection / union
+  return(jaccard_similarity)
+
+}
+```
+
+# Sample data (original and anonymized)
+```{r}
+original_data <- c("74.125.175.39" , "212.1.144.238" , "192.168.1.145" , "8.8.8.8" , "4.2.2.2" , "40.99.214.130" , "172.217.169.10" , "142.250.187.238" ,"40.99.150.130" , "212.1.144.204" )
+
+anonymized_data <- c("74.125" , "212.1" , "192.168" , "8.8" , "4.2" , "40.99" , "172.217" , "142.250" ,"40.99" , "212.1" )
+```
+
+# Calculate Jaccard similarity index and print the result
+```{r}
+jaccard_index <- calculate_jaccard_similarity(original_data, anonymized_data)
+
+print(jaccard_index)
+cat("jaccard similarity index:", jaccard_index, "\n")
+```
+Evaluate privacy level (Entropy)
+#Function to calculate the entropy of the dataset
+```{r}
+calculate_entropy <- function(data) {
+  num_elements <- length(data)
+  if (num_elements == 0) {
+    return(0)
+  } 
+   probabilities <- table(data) / num_elements
+  entropy <- -sum(probabilities * log2(probabilities))
+  return(entropy)
+}
+```
+# Sample the data (Original and Anonymized)
+```{r}
+original_data <- c("74.125.175.39" , "212.1.144.238" , "192.168.1.145" , "8.8.8.8" , "4.2.2.2" , "40.99.214.130" , "172.217.169.10" , "142.250.187.238" ,"40.99.150.130" , "212.1.144.204")
+anonymized_data <- c("74.125" , "212.1" , "192.168" , "8.8" , "4.2" , "40.99" , "172.217" , "142.250" ,"40.99" , "212.1" )
+```
+
+# Calculate the entropy level and print the result
+```{r}
+entropy_anonymized <- calculate_entropy(anonymized_data)
+
+cat("Entropy of anonymized data:", entropy_anonymized, "\n")
+```
+Evaluate the injection attack resistance
+# Sample original network traffic data (Source) and anonymized data
+```{r}
+original_data <- c("74.125.175" , "212.1.144" , "192.168.1" , "8.8.8" , "4.2.2" , "40.99.214" , "172.217.169" , "142.250.187" ,"40.99.150" , "212.1.144")
+
+anonymized_data <- c("74.125" , "212.1" , "192.168" , "8.8" , "4.2" , "40.99" , "172.217" , "142.250" ,"40.99" , "212.1"  )
+```
+# Function to simulate an injection attack and test resistance
+```{r}
+test_injection_attack_resistance <- function(original_data, anonymized_data, injected_prefix) {
+  
+if (injected_prefix %in% anonymized_data) {
+  cat("Injection Attack: The injected prefix is already present in the anonymized data.\n")
+} else {
+  modified_anonymized_data <- c(anonymized_data, injected_prefix)
+    cat("Injection Attack: The injected prefix is not present in the anonymized data.\n")
+    cat("Anonymized Data after Injection:", modified_anonymized_data, "\n")
+    {}
+}
+}
+```
+# Simulate an injection attack by trying to inject prefix "H" into the anonymized data
+```{r}
+test_injection_attack_resistance(original_data, anonymized_data, "H")
+```
+Evaluate false positive
+# Generate sample data
+```{r}
+set.seed(123)
+n <-100
+condition_present <- rbinom(n, 1, 0.2)
+data <- data.frame(
+  original_target = condition_present,
+  anonymized_target = rbinom(n, 1, 0.5) 
+)
+```
+# Calculate false positive and print the result
+```{r}
+false_positives <- data$anonymized_target == 1 & data$original_target == 0
+false_positive_count <- sum(false_positives)
+false_positive_rate <- false_positive_count / sum(data$original_target == 0)
+
+cat("False Positive Count:", false_positive_count, "\n")
+cat("False Positive Rate:", false_positive_rate, "\n")
+```
+
+
+
+
+
+# CONDENSATION-BASED DIFFERENTIAL ANONYMIZATION TECHNIQUE
+
+```{r}
+anonymize_ip_differential <- function (ip_address) {
+  octets <- str_split(ip_address, "\\.") [[1]]
+  anonymized_octets <- sapply(octets, function(octet) {
+    as.integer(octet) %% 10 # Replace each octet with its module 10 value
+  }
+    )
+  anonymize_ip <- paste0(anonymized_octets, collapse = ".")
+  return(anonymize_ip)
+}
+```
+# Anonymize the network traffic data using condensation-based differential
+
+```{r}
+anonymize_network_traffic_differential <- function(traffic_data) {
+  anonymized_data <- sapply(traffic_data, anonymize_ip_differential)
+  return(anonymized_ip)
+}
+
+anonymize_network_traffic_differential <- function(traffic_data) {
+  anonymized_data <- sapply(traffic_data, anonymize_ip_differential)
+  return(anonymized_data)
+}
+```
+# Sample network traffic data with destination IP addresses
+
+```{r}
+network_traffic_data <- c("192.168.1.145" , "212.1.144.238" , "74.125.175.39" , "212.1.144.204" )
+```
+# Anonymize the data and print the results
+
+```{r}
+anonymized_traffic_data <- anonymize_network_traffic_differential(network_traffic_data)
+
+print(anonymized_traffic_data)
+```
+# Measure the entropy level of the anonymized data.
+```{r}
+calculate_entropy <- function(data) {
+   data <- as.factor(data)
+   prob_dist <- prop.table(table(data))
+   entropy_value <- entropy(prob_dist)
+     return(entropy_value)
+}
+```
+# Sample anonymized data 
+
+```{r}
+anonymized_data <- c("2.8.1.5", "2.1.4.8", "4.5.5.9", "2.1.4.4" )
+```
+# Measure the entropy level of the anonymized data and print the results
+
+```{r}
+entropy_value <- calculate_entropy(anonymized_data)
+print(paste("Entropy:", entropy_value))
+```
+Evaluate using Jaccard Similarity Index (Accuracy)
+
+
+#Sample original network traffic data and anonymized network traffic data
+```{r}
+original_data <- c( "192.168.1.145" , "212.1.144.238" , "74.125.175.39" , "212.1.144.204")
+
+anonymized_data <- c("2.8.1.5", "2.1.4.8", "4.5.5.9", "2.1.4.4" )
+```
+
+# Function to calculate Jaccard similarity index
+
+```{r}
+calculate_jaccard_similarity <- function(original_data, anonymized_data) {
+  intersection <- length(intersect(original_data, anonymized_data))
+  union <- length(union(original_data, anonymized_data))
+  jaccard_similarity <- intersection / union
+  return(jaccard_similarity)
+}
+```
+# Calculate the Jaccard similarity index
+
+```{r}
+jaccard_similarity_index <- calculate_jaccard_similarity(original_data, anonymized_data)
+```
+# Display the Jaccard similarity index
+```{r}
+cat("Jaccard Similarity Index:", jaccard_similarity_index, "\n")
+```
+Evaluate the injection attack resistance on condensation-based differential
+# Sample original and anonymized network traffic data (Destination)
+
+```{r}
+original_data <- c("192.168.1" , "212.1.144" , "74.125.175" , "212.1.144" )
+
+anonymized_data <- c("2.8.1", "2.1.4", "4.5.5", "2.1.4")
+```
+
+# Function to simulate an injection attack and test resistance
+
+```{r}
+test_injection_attack_resistance <- function(original_data, anonymized_data, injected_prefix) {
+
+if (injected_prefix %in% anonymized_data) {
+  cat("Injection Attack: The injected prefix is already present in the anonymized data.\n")
+} else {
+  modified_anonymized_data <- c(anonymized_data, injected_prefix)
+    cat("Injection Attack: The injected prefix is not present in the anonymized data.\n")
+    cat("Anonymized Data after Injection:", modified_anonymized_data, "\n")
+  {}
+}
+}
+```
+
+# Simulate an injection attack by trying to inject prefix "Z" into the anonymized data
+
+```{r}
+test_injection_attack_resistance(original_data, anonymized_data, "Z")
+```
+
+
+Evaluate False positive
+#Generate sample data
+```{r}
+n <- 100  # Number of data points
+condition_present <- rbinom(n, 1, 0.2)  # Assuming a 20% presence of the condition
+data <- data.frame(
+  original_target = condition_present,
+  anonymized_target = rbinom(n, 1, 0.5)  # Simulating anonymized target data with 50% presence
+)
+```
+# Evaluate false positive
+
+```{r}
+false_positives <- data$anonymized_target == 1 & data$original_target == 0
+false_positive_count <- sum(false_positives)
+false_positive_rate <- false_positive_count / sum(data$original_target == 0)
+```
+
+# Print the results
+```{r}
+cat("False Positive Count:", false_positive_count, "\n")
+cat("False Positive Rate:", false_positive_rate, "\n")
+```
+
+
